@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "813179399013",
+    "firebase_url": "https://chat-app-97353-default-rtdb.firebaseio.com",
+    "project_id": "chat-app-97353",
+    "storage_bucket": "chat-app-97353.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:813179399013:android:90272d04cb383d77c30f8c",
+        "android_client_info": {
+          "package_name": "com.example.neticechat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "813179399013-9m3jskkjo87qhd4au16b7ov6i6gul4eq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCNSfbaSLJ9FgQVSpDAKybQLoqh--g0sqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "813179399013-9m3jskkjo87qhd4au16b7ov6i6gul4eq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
