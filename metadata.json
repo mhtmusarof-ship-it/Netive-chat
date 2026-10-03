@@ -1,0 +1,6 @@
+{
+  "name": "Netice Chat",
+  "description": "WhatsApp-style messaging app with email verification, real-time chats, status stories, voice and video calls, media sharing, and group management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
