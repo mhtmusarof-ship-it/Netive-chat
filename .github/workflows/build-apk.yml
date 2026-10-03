@@ -12,7 +12,6 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -49,6 +48,21 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
+
+      # Node.js ও React Native Bundle তৈরির নতুন ধাপ
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Create Assets Folder
+        run: mkdir -p android/app/src/main/assets
+
+      - name: Bundle JS and Assets
+        run: npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
 
       - name: Create temporary debug keystore
         run: |
@@ -92,17 +106,14 @@ jobs:
             fi
             exit 1
           fi
-
           if [ ! -s "$EXPECTED_APK" ]; then
             echo "ERROR: Debug APK file is empty!"
             exit 1
           fi
-
           case "$EXPECTED_APK" in
             *.apk) ;;
             *) echo "ERROR: File does not have .apk extension!"; exit 1 ;;
           esac
-
           echo "Verified debug APK successfully: $EXPECTED_APK"
           ls -lh "$EXPECTED_APK"
 
@@ -120,23 +131,18 @@ jobs:
           ASSET_DIR="${RUNNER_TEMP}/apk-release-asset"
           rm -rf "$ASSET_DIR"
           mkdir -p "$ASSET_DIR"
-
           RAW_REPO_NAME=$(basename "${{ github.repository }}")
-          SAFE_REPO_NAME=$(echo "$RAW_REPO_NAME" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9_-]+/-/g' | sed -E 's/^-+|-+$//g')
+          SAFE_REPO_NAME=$(echo "$RAW_REPO_NAME" \vert{} tr '[:upper:]' '[:lower:]' \vert{} sed -E 's/[^a-z0-9_-]+/-/g' \vert{} sed -E 's/^-+\vert{}-+$//g')
           if [ -z "$SAFE_REPO_NAME" ]; then
             SAFE_REPO_NAME="android-app"
           fi
-
           ASSET_FILENAME="${SAFE_REPO_NAME}-debug-build-${{ github.run_number }}.apk"
           ASSET_PATH="${ASSET_DIR}/${ASSET_FILENAME}"
-
           cp "app/build/outputs/apk/debug/app-debug.apk" "$ASSET_PATH"
-
-          if [ ! -f "$ASSET_PATH" ] || [ ! -s "$ASSET_PATH" ]; then
+          if [ ! -f "$ASSET_PATH" ] \vert{}\vert{} [ ! -s "$ASSET_PATH" ]; then
             echo "ERROR: Failed to prepare release asset at $ASSET_PATH"
             exit 1
           fi
-
           echo "Prepared release asset: $ASSET_PATH"
           echo "asset_path=$ASSET_PATH" >> "$GITHUB_OUTPUT"
           echo "asset_name=$ASSET_FILENAME" >> "$GITHUB_OUTPUT"
@@ -149,26 +155,20 @@ jobs:
         run: |
           echo "=== Publishing APK to GitHub Releases ==="
           gh --version
-
           ASSET_PATH="${{ steps.prepare_asset.outputs.asset_path }}"
           ASSET_NAME="${{ steps.prepare_asset.outputs.asset_name }}"
-
-          if [ ! -f "$ASSET_PATH" ] || [ ! -s "$ASSET_PATH" ]; then
+          if [ ! -f "$ASSET_PATH" ] \vert{}\vert{} [ ! -s "$ASSET_PATH" ]; then
             echo "ERROR: Release asset does not exist or is empty: $ASSET_PATH"
             exit 1
           fi
-
           case "$ASSET_PATH" in
             *.apk) ;;
             *) echo "ERROR: Release asset is not an APK file!"; exit 1 ;;
           esac
-
           TAG_NAME="debug-apk-build-${{ github.run_number }}-${{ github.run_attempt }}"
           RELEASE_TITLE="Debug APK Build #${{ github.run_number }}"
-
           NOTES=$(cat <<'EOF'
           ### Debug APK Build
-
           This is an automatically generated debug APK built by GitHub Actions.
 
           - **Run Number:** ${{ github.run_number }}
@@ -178,8 +178,7 @@ jobs:
           > **Note:** This APK is intended for testing and development purposes. It is not a Play Store production release and is signed only with a temporary debug keystore.
           EOF
           )
-
-          echo "Creating release $TAG_NAME with asset $ASSET_NAME..."
+          echo "Creating release $TAG_NAME with asset$ASSET_NAME..."
           gh release create "$TAG_NAME" "$ASSET_PATH" \
             --title "$RELEASE_TITLE" \
             --notes "$NOTES" \
@@ -195,17 +194,14 @@ jobs:
           TAG_NAME="debug-apk-build-${{ github.run_number }}-${{ github.run_attempt }}"
           RELEASE_TITLE="Debug APK Build #${{ github.run_number }}"
           ASSET_NAME="${{ steps.prepare_asset.outputs.asset_name }}"
-
           if [ "${{ steps.publish_release.outcome }}" = "success" ]; then
             echo "GitHub Release published successfully!"
             gh release view "$TAG_NAME" || true
             RELEASE_URL=$(gh release view "$TAG_NAME" --json url -q .url 2>/dev/null || echo "https://github.com/${{ github.repository }}/releases/tag/${TAG_NAME}")
-
             echo "Release Tag: $TAG_NAME"
             echo "Release Title: $RELEASE_TITLE"
             echo "Release URL: $RELEASE_URL"
             echo "Asset Name: $ASSET_NAME"
-
             {
               echo "### 🚀 Debug APK Build & Release Succeeded"
               echo ""
@@ -220,7 +216,6 @@ jobs:
           else
             echo "::warning::GitHub Release publishing was not completed or encountered an issue, but the debug APK was built successfully."
             echo "Artifact 'app-debug-apk' is available for download in the GitHub Actions run summary."
-
             {
               echo "### ⚠️ Debug APK Build Succeeded (Release Publishing Notice)"
               echo ""
